@@ -530,13 +530,6 @@ struct Window::PrivateData {
 
     void setTransientWinId(const uintptr_t winId)
     {
-#if defined(DISTRHO_OS_WINDOWS)
-        // TODO
-#elif defined(DISTRHO_OS_MAC)
-        // TODO
-#else
-        XSetTransientForHint(xDisplay, xWindow, static_cast< ::Window>(winId));
-#endif
     }
 
     // -------------------------------------------------------------------
