@@ -58,13 +58,7 @@ struct Window::PrivateData {
           fTitle(nullptr),
           fWidgets(),
           fModal(),
-#if defined(DISTRHO_OS_MAC)
-          fNeedsIdle(true),
-          mView(nullptr),
-          mWindow(nullptr)
-#else
-          xDisplay(nullptr),
-#endif
+          monitor(nullptr),
     {
         DBG("Creating window without parent..."); DBGF;
         init();
@@ -83,13 +77,7 @@ struct Window::PrivateData {
           fTitle(nullptr),
           fWidgets(),
           fModal(parent.pData),
-#if defined(DISTRHO_OS_MAC)
-          fNeedsIdle(false),
-          mView(nullptr),
-          mWindow(nullptr)
-#else
-          xDisplay(nullptr),
-#endif
+          monitor(nullptr),
     {
         DBG("Creating window with parent..."); DBGF;
         init();
@@ -199,12 +187,7 @@ struct Window::PrivateData {
             fTitle = nullptr;
         }
 
-#if defined(DISTRHO_OS_MAC)
-        mView   = nullptr;
-        mWindow = nullptr;
-#else
-        xDisplay = nullptr;
-#endif
+        monitor = nullptr;
 
         DBG("Success!\n");
     }
@@ -662,13 +645,7 @@ struct Window::PrivateData {
         DISTRHO_DECLARE_NON_COPY_STRUCT(Modal)
     } fModal;
 
-#if defined(DISTRHO_OS_MAC)
-    bool            fNeedsIdle;
-    PuglOpenGLView* mView;
-    id              mWindow;
-#else
-    Display* xDisplay;
-#endif
+          GLFWmonitor * monitor;
 
     // -------------------------------------------------------------------
     // Callbacks
