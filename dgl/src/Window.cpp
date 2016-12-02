@@ -568,7 +568,7 @@ struct Window::PrivateData {
 
     void idle()
     {
-        puglProcessEvents(fView);
+	glfwPollEvents();
 
 #ifdef DISTRHO_OS_MAC
         if (fNeedsIdle)
