@@ -19,24 +19,6 @@
 
 #include "../Base.hpp"
 
-#undef PUGL_HAVE_CAIRO
-#undef PUGL_HAVE_GL
-#define PUGL_HAVE_GL 1
-
-#include "pugl/pugl.h"
-
-#if defined(DISTRHO_OS_WINDOWS)
-# include "pugl/pugl_win.cpp"
-#elif defined(DISTRHO_OS_MAC)
-# include "pugl/pugl_osx.m"
-#else
-# include <sys/types.h>
-# include <unistd.h>
-extern "C" {
-# include "pugl/pugl_x11.c"
-}
-#endif
-
 #include "ApplicationPrivateData.hpp"
 #include "WidgetPrivateData.hpp"
 #include "../StandaloneWindow.hpp"
