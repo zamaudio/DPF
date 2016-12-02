@@ -525,21 +525,7 @@ struct Window::PrivateData {
 
         fTitle = strdup(title);
 
-#if defined(DISTRHO_OS_WINDOWS)
-        SetWindowTextA(hwnd, title);
-#elif defined(DISTRHO_OS_MAC)
-        if (mWindow != nullptr)
-        {
-            NSString* titleString = [[NSString alloc]
-                                      initWithBytes:title
-                                             length:strlen(title)
-                                          encoding:NSUTF8StringEncoding];
-
-            [mWindow setTitle:titleString];
-        }
-#else
-        XStoreName(xDisplay, xWindow, title);
-#endif
+	glfwSetWindowTitle(fView, title);
     }
 
     void setTransientWinId(const uintptr_t winId)
