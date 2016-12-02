@@ -394,36 +394,10 @@ struct Window::PrivateData {
         if (yesNo && fFirstInit)
             setSize(fWidth, fHeight, true);
 
-#if defined(DISTRHO_OS_WINDOWS)
         if (yesNo)
-            ShowWindow(hwnd, fFirstInit ? SW_SHOWNORMAL : SW_RESTORE);
+            glfwShowWindow(fView);
         else
-            ShowWindow(hwnd, SW_HIDE);
-
-        UpdateWindow(hwnd);
-#elif defined(DISTRHO_OS_MAC)
-        if (yesNo)
-        {
-            if (mWindow != nullptr)
-                [mWindow setIsVisible:YES];
-            else
-                [mView setHidden:NO];
-        }
-        else
-        {
-            if (mWindow != nullptr)
-                [mWindow setIsVisible:NO];
-            else
-                [mView setHidden:YES];
-        }
-#else
-        if (yesNo)
-            XMapRaised(xDisplay, xWindow);
-        else
-            XUnmapWindow(xDisplay, xWindow);
-
-        XFlush(xDisplay);
-#endif
+            glfwHideWindow(fView);
 
         if (yesNo)
         {
