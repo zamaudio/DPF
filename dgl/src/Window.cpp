@@ -170,6 +170,8 @@ struct Window::PrivateData {
         puglInitWindowSize(fView, static_cast<int>(fWidth), static_cast<int>(fHeight));
 
         puglSetHandle(fView, this);
+	// XXX do callbacks latter
+#if 0
         puglSetDisplayFunc(fView, onDisplayCallback);
         puglSetKeyboardFunc(fView, onKeyboardCallback);
         puglSetMotionFunc(fView, onMotionCallback);
@@ -179,6 +181,7 @@ struct Window::PrivateData {
         puglSetReshapeFunc(fView, onReshapeCallback);
         puglSetCloseFunc(fView, onCloseCallback);
         puglSetFileSelectedFunc(fView, fileBrowserSelectedCallback);
+#endif
 
         puglCreateWindow(fView, nullptr);
 
@@ -650,6 +653,7 @@ struct Window::PrivateData {
 
     // -------------------------------------------------------------------
 
+#if 0 // XXX do callbacks later
     void onPuglDisplay()
     {
         fSelf->onDisplayBefore();
@@ -824,6 +828,7 @@ struct Window::PrivateData {
 
         close();
     }
+#endif // XXX do callbacks later
 
     // -------------------------------------------------------------------
 
