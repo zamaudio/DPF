@@ -151,7 +151,7 @@ struct Window::PrivateData {
         if (fUsingEmbed)
         {
             DBG("NOTE: Embed window is always visible and non-resizable\n");
-            puglShowWindow(fView);
+            glfwShowWindow(fView);
             fApp.pData->oneShown();
             fFirstInit = false;
         }
@@ -210,7 +210,7 @@ struct Window::PrivateData {
             XChangeProperty(xDisplay, xWindow, _nwp, XA_CARDINAL, 32, PropModeReplace, (const uchar*)&pid, 1);
         }
 #endif
-        puglEnterContext(fView);
+        glfwMakeContextCurrent(fView);
 
         fApp.pData->windows.push_back(fSelf);
 
@@ -231,7 +231,7 @@ struct Window::PrivateData {
 
         if (fUsingEmbed)
         {
-            puglHideWindow(fView);
+            glfwHideWindow(fView);
             fApp.pData->oneHidden();
         }
 
@@ -243,7 +243,7 @@ struct Window::PrivateData {
 
         if (fView != nullptr)
         {
-            puglDestroy(fView);
+            glfwDestroyWindow(fView);
             fView = nullptr;
         }
 
@@ -819,7 +819,7 @@ struct Window::PrivateData {
 
     Application& fApp;
     Window*      fSelf;
-    PuglView*    fView;
+    GLFWwindow*    fView;
 
     bool fFirstInit;
     bool fVisible;
