@@ -830,6 +830,7 @@ struct Window::PrivateData {
     // -------------------------------------------------------------------
     // Callbacks
 
+#if 0 // XXX
     #define handlePtr ((PrivateData*)puglGetHandle(view))
 
     static void onDisplayCallback(PuglView* view)
@@ -878,6 +879,7 @@ struct Window::PrivateData {
     }
 
     #undef handlePtr
+#endif // XXX
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PrivateData)
 };
