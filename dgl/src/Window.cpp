@@ -369,22 +369,7 @@ struct Window::PrivateData {
     void focus()
     {
         DBG("Window focus\n");
-#if defined(DISTRHO_OS_WINDOWS)
-        SetForegroundWindow(hwnd);
-        SetActiveWindow(hwnd);
-        SetFocus(hwnd);
-#elif defined(DISTRHO_OS_MAC)
-        if (mWindow != nullptr)
-        {
-            // TODO
-            //[NSApp activateIgnoringOtherApps:YES];
-            //[mWindow makeKeyAndOrderFront:mWindow];
-        }
-#else
-        XRaiseWindow(xDisplay, xWindow);
-        XSetInputFocus(xDisplay, xWindow, RevertToPointerRoot, CurrentTime);
-        XFlush(xDisplay);
-#endif
+	glfwFocusWindow(fView);
     }
 
     // -------------------------------------------------------------------
