@@ -64,7 +64,6 @@ struct Window::PrivateData {
           mWindow(nullptr)
 #else
           xDisplay(nullptr),
-          xWindow(0)
 #endif
     {
         DBG("Creating window without parent..."); DBGF;
@@ -90,19 +89,10 @@ struct Window::PrivateData {
           mWindow(nullptr)
 #else
           xDisplay(nullptr),
-          xWindow(0)
 #endif
     {
         DBG("Creating window with parent..."); DBGF;
         init();
-
-        const PuglInternals* const parentImpl(parent.pData->fView->impl);
-#if defined(DISTRHO_OS_MAC)
-        // TODO
-        //[parentImpl->window orderWindow:NSWindowBelow relativeTo:[[mView window] windowNumber]];
-#else
-        XSetTransientForHint(xDisplay, xWindow, parentImpl->win);
-#endif
     }
 
     PrivateData(Application& app, Window* const self, const intptr_t parentId)
@@ -166,28 +156,6 @@ struct Window::PrivateData {
         puglSetFileSelectedFunc(fView, fileBrowserSelectedCallback);
 #endif
 
-        PuglInternals* impl = fView->impl;
-#if defined(DISTRHO_OS_MAC)
-        mView   = impl->glview;
-        mWindow = impl->window;
-        DISTRHO_SAFE_ASSERT(mView != nullptr);
-        if (fUsingEmbed) {
-            DISTRHO_SAFE_ASSERT(mWindow == nullptr);
-        } else {
-            DISTRHO_SAFE_ASSERT(mWindow != nullptr);
-        }
-#else
-        xDisplay = impl->display;
-        xWindow  = impl->win;
-        DISTRHO_SAFE_ASSERT(xWindow != 0);
-
-        if (! fUsingEmbed)
-        {
-            pid_t pid = getpid();
-            Atom _nwp = XInternAtom(xDisplay, "_NET_WM_PID", True);
-            XChangeProperty(xDisplay, xWindow, _nwp, XA_CARDINAL, 32, PropModeReplace, (const uchar*)&pid, 1);
-        }
-#endif
         glfwMakeContextCurrent(fView);
 
         fApp.pData->windows.push_back(fSelf);
@@ -236,7 +204,6 @@ struct Window::PrivateData {
         mWindow = nullptr;
 #else
         xDisplay = nullptr;
-        xWindow  = 0;
 #endif
 
         DBG("Success!\n");
@@ -303,21 +270,7 @@ struct Window::PrivateData {
         fModal.enabled = false;
 
         if (fModal.parent != nullptr)
-        {
             fModal.parent->fModal.childFocus = nullptr;
-
-            // the mouse position probably changed since the modal appeared,
-            // so send a mouse motion event to the modal's parent window
-#if defined(DISTRHO_OS_MAC)
-            // TODO
-#else
-            int i, wx, wy;
-            uint u;
-            ::Window w;
-            if (XQueryPointer(fModal.parent->xDisplay, fModal.parent->xWindow, &w, &w, &i, &i, &wx, &wy, &u) == True)
-                fModal.parent->onPuglMotion(wx, wy);
-#endif
-        }
 
         DBG("Ok\n");
     }
@@ -417,49 +370,7 @@ struct Window::PrivateData {
 
         DBGp("Window setSize called %s, size %i %i, resizable %s\n", forced ? "(forced)" : "(not forced)", width, height, fResizable?"true":"false");
 
-#if defined(DISTRHO_OS_MAC)
-        [mView setFrame:NSMakeRect(0, 0, width, height)];
-
-        if (mWindow != nullptr)
-        {
-            const NSSize size = NSMakeSize(width, height);
-            [mWindow setContentSize:size];
-
-            if (fResizable)
-            {
-                [mWindow setContentMinSize:NSMakeSize(1, 1)];
-                [mWindow setContentMaxSize:NSMakeSize(99999, 99999)];
-                [[mWindow standardWindowButton:NSWindowZoomButton] setHidden:NO];
-            }
-            else
-            {
-                [mWindow setContentMinSize:size];
-                [mWindow setContentMaxSize:size];
-                [[mWindow standardWindowButton:NSWindowZoomButton] setHidden:YES];
-            }
-        }
-#else
-        XResizeWindow(xDisplay, xWindow, width, height);
-
-        if (! fResizable)
-        {
-            XSizeHints sizeHints;
-            memset(&sizeHints, 0, sizeof(sizeHints));
-
-            sizeHints.flags      = PSize|PMinSize|PMaxSize;
-            sizeHints.width      = static_cast<int>(width);
-            sizeHints.height     = static_cast<int>(height);
-            sizeHints.min_width  = static_cast<int>(width);
-            sizeHints.min_height = static_cast<int>(height);
-            sizeHints.max_width  = static_cast<int>(width);
-            sizeHints.max_height = static_cast<int>(height);
-
-            XSetNormalHints(xDisplay, xWindow, &sizeHints);
-        }
-
-        if (! forced)
-            XFlush(xDisplay);
-#endif
+	glfwSetWindowSize(fView, width, height);
 
         puglPostRedisplay(fView);
     }
@@ -757,7 +668,6 @@ struct Window::PrivateData {
     id              mWindow;
 #else
     Display* xDisplay;
-    ::Window xWindow;
 #endif
 
     // -------------------------------------------------------------------
@@ -872,7 +782,7 @@ void Window::repaint() noexcept
 
 bool Window::openFileBrowser(const FileBrowserOptions& options)
 {
-#ifdef SOFD_HAVE_X11
+#ifdef 0// SOFD_HAVE_X11
     using DISTRHO_NAMESPACE::String;
 
     // --------------------------------------------------------------------------
