@@ -759,7 +759,8 @@ void Window::repaint() noexcept
 
 bool Window::openFileBrowser(const FileBrowserOptions& options)
 {
-#ifdef 0// SOFD_HAVE_X11
+#if 0
+//#ifdef SOFD_HAVE_X11
     using DISTRHO_NAMESPACE::String;
 
     // --------------------------------------------------------------------------
