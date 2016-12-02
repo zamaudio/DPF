@@ -58,9 +58,7 @@ struct Window::PrivateData {
           fTitle(nullptr),
           fWidgets(),
           fModal(),
-#if defined(DISTRHO_OS_WINDOWS)
-          hwnd(0)
-#elif defined(DISTRHO_OS_MAC)
+#if defined(DISTRHO_OS_MAC)
           fNeedsIdle(true),
           mView(nullptr),
           mWindow(nullptr)
@@ -86,9 +84,7 @@ struct Window::PrivateData {
           fTitle(nullptr),
           fWidgets(),
           fModal(parent.pData),
-#if defined(DISTRHO_OS_WINDOWS)
-          hwnd(0)
-#elif defined(DISTRHO_OS_MAC)
+#if defined(DISTRHO_OS_MAC)
           fNeedsIdle(false),
           mView(nullptr),
           mWindow(nullptr)
@@ -101,9 +97,7 @@ struct Window::PrivateData {
         init();
 
         const PuglInternals* const parentImpl(parent.pData->fView->impl);
-#if defined(DISTRHO_OS_WINDOWS)
-        // TODO
-#elif defined(DISTRHO_OS_MAC)
+#if defined(DISTRHO_OS_MAC)
         // TODO
         //[parentImpl->window orderWindow:NSWindowBelow relativeTo:[[mView window] windowNumber]];
 #else
@@ -173,10 +167,7 @@ struct Window::PrivateData {
 #endif
 
         PuglInternals* impl = fView->impl;
-#if defined(DISTRHO_OS_WINDOWS)
-        hwnd = impl->hwnd;
-        DISTRHO_SAFE_ASSERT(hwnd != 0);
-#elif defined(DISTRHO_OS_MAC)
+#if defined(DISTRHO_OS_MAC)
         mView   = impl->glview;
         mWindow = impl->window;
         DISTRHO_SAFE_ASSERT(mView != nullptr);
@@ -240,9 +231,7 @@ struct Window::PrivateData {
             fTitle = nullptr;
         }
 
-#if defined(DISTRHO_OS_WINDOWS)
-        hwnd = 0;
-#elif defined(DISTRHO_OS_MAC)
+#if defined(DISTRHO_OS_MAC)
         mView   = nullptr;
         mWindow = nullptr;
 #else
@@ -302,22 +291,6 @@ struct Window::PrivateData {
         fModal.enabled = true;
         fModal.parent->fModal.childFocus = this;
 
-#ifdef DISTRHO_OS_WINDOWS
-        // Center this window
-        PuglInternals* const parentImpl = fModal.parent->fView->impl;
-
-        RECT curRect;
-        RECT parentRect;
-        GetWindowRect(hwnd, &curRect);
-        GetWindowRect(parentImpl->hwnd, &parentRect);
-
-        int x = parentRect.left+(parentRect.right-curRect.right)/2;
-        int y = parentRect.top +(parentRect.bottom-curRect.bottom)/2;
-
-        SetWindowPos(hwnd, 0, x, y, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
-        UpdateWindow(hwnd);
-#endif
-
         fModal.parent->setVisible(true);
         setVisible(true);
 
@@ -335,9 +308,7 @@ struct Window::PrivateData {
 
             // the mouse position probably changed since the modal appeared,
             // so send a mouse motion event to the modal's parent window
-#if defined(DISTRHO_OS_WINDOWS)
-            // TODO
-#elif defined(DISTRHO_OS_MAC)
+#if defined(DISTRHO_OS_MAC)
             // TODO
 #else
             int i, wx, wy;
@@ -417,11 +388,7 @@ struct Window::PrivateData {
 
         fResizable = yesNo;
 
-#if defined(DISTRHO_OS_WINDOWS)
-        const int winFlags = fResizable ? GetWindowLong(hwnd, GWL_STYLE) |  WS_SIZEBOX
-                                        : GetWindowLong(hwnd, GWL_STYLE) & ~WS_SIZEBOX;
-        SetWindowLong(hwnd, GWL_STYLE, winFlags);
-#elif defined(DISTRHO_OS_MAC)
+#if defined(DISTRHO_OS_MAC)
         const uint flags(yesNo ? (NSViewWidthSizable|NSViewHeightSizable) : 0x0);
         [mView setAutoresizingMask:flags];
 #endif
@@ -450,17 +417,7 @@ struct Window::PrivateData {
 
         DBGp("Window setSize called %s, size %i %i, resizable %s\n", forced ? "(forced)" : "(not forced)", width, height, fResizable?"true":"false");
 
-#if defined(DISTRHO_OS_WINDOWS)
-        const int winFlags = WS_POPUPWINDOW | WS_CAPTION | (fResizable ? WS_SIZEBOX : 0x0);
-        RECT wr = { 0, 0, static_cast<long>(width), static_cast<long>(height) };
-        AdjustWindowRectEx(&wr, fUsingEmbed ? WS_CHILD : winFlags, FALSE, WS_EX_TOPMOST);
-
-        SetWindowPos(hwnd, 0, 0, 0, wr.right-wr.left, wr.bottom-wr.top,
-                     SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOOWNERZORDER|SWP_NOZORDER);
-
-        if (! forced)
-            UpdateWindow(hwnd);
-#elif defined(DISTRHO_OS_MAC)
+#if defined(DISTRHO_OS_MAC)
         [mView setFrame:NSMakeRect(0, 0, width, height)];
 
         if (mWindow != nullptr)
@@ -794,9 +751,7 @@ struct Window::PrivateData {
         DISTRHO_DECLARE_NON_COPY_STRUCT(Modal)
     } fModal;
 
-#if defined(DISTRHO_OS_WINDOWS)
-    HWND     hwnd;
-#elif defined(DISTRHO_OS_MAC)
+#if defined(DISTRHO_OS_MAC)
     bool            fNeedsIdle;
     PuglOpenGLView* mView;
     id              mWindow;
