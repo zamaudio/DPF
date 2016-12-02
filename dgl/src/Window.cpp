@@ -355,7 +355,7 @@ struct Window::PrivateData {
 
 	glfwSetWindowSize(fView, width, height);
 
-        puglPostRedisplay(fView);
+        //puglPostRedisplay(fView);
     }
 
     // -------------------------------------------------------------------
