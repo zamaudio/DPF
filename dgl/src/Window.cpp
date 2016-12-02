@@ -49,7 +49,7 @@ struct Window::PrivateData {
     PrivateData(Application& app, Window* const self)
         : fApp(app),
           fSelf(self),
-          fView(puglInit()),
+          fView(nullptr),
           fFirstInit(true),
           fVisible(false),
           fResizable(true),
@@ -77,7 +77,7 @@ struct Window::PrivateData {
     PrivateData(Application& app, Window* const self, Window& parent)
         : fApp(app),
           fSelf(self),
-          fView(puglInit()),
+          fView(nullptr),
           fFirstInit(true),
           fVisible(false),
           fResizable(true),
@@ -926,7 +926,7 @@ void Window::focus()
 
 void Window::repaint() noexcept
 {
-    puglPostRedisplay(pData->fView);
+    //puglPostRedisplay(pData->fView);
 }
 
 // static int fib_filter_filename_filter(const char* const name)
@@ -1068,7 +1068,7 @@ Application& Window::getApp() const noexcept
 
 intptr_t Window::getWindowId() const noexcept
 {
-    return puglGetNativeWindow(pData->fView);
+    return 0;//puglGetNativeWindow(pData->fView);
 }
 
 void Window::_addWidget(Widget* const widget)
