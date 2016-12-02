@@ -14,8 +14,7 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-// we need this for now
-//#define PUGL_GRAB_FOCUS 1
+#include <GLFW/glfw3.h>
 
 #include "../Base.hpp"
 
