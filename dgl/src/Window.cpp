@@ -115,7 +115,7 @@ struct Window::PrivateData {
     PrivateData(Application& app, Window* const self, const intptr_t parentId)
         : fApp(app),
           fSelf(self),
-          fView(puglInit()),
+          fView(nullptr),
           fFirstInit(true),
           fVisible(parentId != 0),
           fResizable(parentId == 0),
@@ -125,21 +125,11 @@ struct Window::PrivateData {
           fTitle(nullptr),
           fWidgets(),
           fModal(),
-#if defined(DISTRHO_OS_WINDOWS)
-          hwnd(0)
-#elif defined(DISTRHO_OS_MAC)
-          fNeedsIdle(parentId == 0),
-          mView(nullptr),
-          mWindow(nullptr)
-#else
-          xDisplay(nullptr),
-          xWindow(0)
-#endif
     {
         if (fUsingEmbed)
         {
             DBG("Creating embedded window..."); DBGF;
-            puglInitWindowParent(fView, parentId);
+            //puglInitWindowParent(fView, parentId);
         }
         else
         {
@@ -159,17 +149,17 @@ struct Window::PrivateData {
 
     void init()
     {
-        if (fSelf == nullptr || fView == nullptr)
+        if (fSelf == nullptr )//|| fView == nullptr)
         {
             DBG("Failed!\n");
             return;
         }
 
-        puglInitContextType(fView, PUGL_GL);
-        puglInitUserResizable(fView, fResizable);
-        puglInitWindowSize(fView, static_cast<int>(fWidth), static_cast<int>(fHeight));
+	fView = glfwCreateWindow(static_cast<int>(fWidth), static_cast<int>(fHeight), "title", nullptr, nullptr);
 
-        puglSetHandle(fView, this);
+	if (!glfwInit())
+		exit(1);
+
 	// XXX do callbacks latter
 #if 0
         puglSetDisplayFunc(fView, onDisplayCallback);
@@ -182,8 +172,6 @@ struct Window::PrivateData {
         puglSetCloseFunc(fView, onCloseCallback);
         puglSetFileSelectedFunc(fView, fileBrowserSelectedCallback);
 #endif
-
-        puglCreateWindow(fView, nullptr);
 
         PuglInternals* impl = fView->impl;
 #if defined(DISTRHO_OS_WINDOWS)
