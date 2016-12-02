@@ -103,8 +103,8 @@ ifeq ($(LINUX),true)
 ifneq ($(shell pkg-config --exists gl && echo true),true)
 $(error OpenGL missing, cannot continue)
 endif
-ifneq ($(shell pkg-config --exists x11 && echo true),true)
-$(error X11 missing, cannot continue)
+ifneq ($(shell pkg-config --exists glfw3 && echo true),true)
+$(error GLFW missing, cannot continue)
 endif
 endif
 
@@ -112,16 +112,16 @@ endif
 # Set libs stuff
 
 ifeq ($(LINUX),true)
-DGL_FLAGS = $(shell pkg-config --cflags gl x11)
-DGL_LIBS  = $(shell pkg-config --libs gl x11)
+DGL_FLAGS = $(shell pkg-config --cflags gl glfw3)
+DGL_LIBS  = $(shell pkg-config --libs gl glfw3)
 endif
 
 ifeq ($(MACOS),true)
-DGL_LIBS  = -framework OpenGL -framework Cocoa
+DGL_LIBS  = -framework OpenGL -framework Cocoa -lglfw
 endif
 
 ifeq ($(WIN32),true)
-DGL_LIBS  = -lopengl32 -lgdi32
+DGL_LIBS  = -lopengl32 -lgdi32 -lglfw3dll
 endif
 
 # --------------------------------------------------------------
