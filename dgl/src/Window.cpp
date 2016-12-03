@@ -139,7 +139,6 @@ struct Window::PrivateData {
 	// XXX do callbacks latter
 #if 0
         puglSetSpecialFunc(fView, onSpecialCallback);
-        puglSetFileSelectedFunc(fView, fileBrowserSelectedCallback);
 #endif
 	glfwSetWindowUserPointer(fView, this);
 	glfwSetWindowRefreshCallback(fView, onDisplayCallback);
@@ -149,6 +148,7 @@ struct Window::PrivateData {
 	glfwSetScrollCallback(fView, onScrollCallback);
         glfwSetCursorPosCallback(fView, onMotionCallback);
 	glfwSetWindowCloseCallback(fView, onCloseCallback);
+        glfwSetDropCallback(fView, fileBrowserSelectedCallback);
 
         glfwMakeContextCurrent(fView);
 
@@ -698,15 +698,15 @@ struct Window::PrivateData {
         handlePtr->onPuglMotion((int)x, (int)y);
     }
 
+    static void fileBrowserSelectedCallback(GLFWwindow* view, int count, const char** filenames)
+    {
+        handlePtr->fSelf->fileBrowserSelected(count, filenames);
+    }
+
 #if 0 // XXX
     static int onSpecialCallback(PuglView* view, bool press, PuglKey key)
     {
         return handlePtr->onPuglSpecial(press, static_cast<Key>(key));
-    }
-
-    static void fileBrowserSelectedCallback(PuglView* view, const char* filename)
-    {
-        handlePtr->fSelf->fileBrowserSelected(filename);
     }
 #endif // XXX
 
@@ -965,8 +965,11 @@ void Window::onClose()
 {
 }
 
-void Window::fileBrowserSelected(const char*)
+void Window::fileBrowserSelected(int count, const char ** filenames)
 {
+	for (unsigned i = 0; i < count; i++) {
+		printf("file path dropped on window was: %s\n", filenames[i]);
+	}
 }
 
 // -----------------------------------------------------------------------
