@@ -54,6 +54,7 @@ struct Window::PrivateData {
           fResizable(true),
           fUsingEmbed(false),
           fNeedsRepaint(true),
+          fLastKeyMod(kModifierNone),
           fWidth(1),
           fHeight(1),
           fTitle(nullptr),
@@ -74,6 +75,7 @@ struct Window::PrivateData {
           fResizable(true),
           fUsingEmbed(false),
           fNeedsRepaint(true),
+          fLastKeyMod(kModifierNone),
           fWidth(1),
           fHeight(1),
           fTitle(nullptr),
@@ -94,6 +96,7 @@ struct Window::PrivateData {
           fResizable(parentId == 0),
           fUsingEmbed(parentId != 0),
           fNeedsRepaint(true),
+          fLastKeyMod(kModifierNone),
           fWidth(1),
           fHeight(1),
           fTitle(nullptr),
@@ -471,6 +474,31 @@ struct Window::PrivateData {
             return;
         }
 
+        if (press) {
+            switch (key) {
+            case GLFW_KEY_LEFT_SHIFT:
+            case GLFW_KEY_RIGHT_SHIFT:
+                fLastKeyMod = kModifierShift;
+                break;
+            case GLFW_KEY_LEFT_CONTROL:
+            case GLFW_KEY_RIGHT_CONTROL:
+                fLastKeyMod = kModifierControl;
+                break;
+            case GLFW_KEY_LEFT_ALT:
+            case GLFW_KEY_RIGHT_ALT:
+                fLastKeyMod = kModifierAlt;
+                break;
+            case GLFW_KEY_LEFT_SUPER:
+            case GLFW_KEY_RIGHT_SUPER:
+                fLastKeyMod = kModifierSuper;
+            default:
+                fLastKeyMod = kModifierNone;
+                break;
+            }
+        } else {
+            fLastKeyMod = kModifierNone;
+        }
+
         Widget::KeyboardEvent ev;
         ev.press = press;
         ev.key  = key;
@@ -550,7 +578,7 @@ struct Window::PrivateData {
             return;
 
         Widget::MotionEvent ev;
-        //ev.mod  = static_cast<Modifier>(mods);
+        ev.mod  = fLastKeyMod;
         ev.time = (uint32_t)(glfwGetTime() * 1000.);
 
         FOR_EACH_WIDGET_INV(rit)
@@ -573,7 +601,7 @@ struct Window::PrivateData {
 
         Widget::ScrollEvent ev;
         ev.delta = Point<float>(dx, dy);
-        //ev.mod   = static_cast<Modifier>(mods);
+        ev.mod   = fLastKeyMod;
         ev.time = (uint32_t)(glfwGetTime() * 1000.);
 
         FOR_EACH_WIDGET_INV(rit)
@@ -634,6 +662,7 @@ struct Window::PrivateData {
     bool fResizable;
     bool fUsingEmbed;
     bool fNeedsRepaint;
+    Modifier fLastKeyMod;
     uint fWidth;
     uint fHeight;
     char* fTitle;
