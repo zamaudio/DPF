@@ -151,7 +151,6 @@ struct Window::PrivateData {
 	glfwSetWindowCloseCallback(fView, onCloseCallback);
 
         glfwMakeContextCurrent(fView);
-	glfwSwapInterval(0);
 
         fApp.pData->windows.push_back(fSelf);
 
