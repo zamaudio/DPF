@@ -126,25 +126,32 @@ struct Window::PrivateData {
             return;
         }
 
-	if (!glfwInit())
-		exit(1);
+        if (!glfwInit())
+        {
+            DBG("Failed!\n");
+            exit(1);
+        }
 
-	fView = glfwCreateWindow(static_cast<int>(fWidth), static_cast<int>(fHeight), "title", nullptr, nullptr);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+        fView = glfwCreateWindow(static_cast<int>(fWidth), static_cast<int>(fHeight), "title", nullptr, nullptr);
 
 	// XXX do callbacks latter
 #if 0
-        puglSetDisplayFunc(fView, onDisplayCallback);
-        puglSetMotionFunc(fView, onMotionCallback);
         puglSetSpecialFunc(fView, onSpecialCallback);
-        puglSetReshapeFunc(fView, onReshapeCallback);
         puglSetFileSelectedFunc(fView, fileBrowserSelectedCallback);
 #endif
+	glfwSetWindowUserPointer(fView, this);
+	glfwSetWindowRefreshCallback(fView, onDisplayCallback);
+        glfwSetWindowSizeCallback(fView, onReshapeCallback);
 	glfwSetKeyCallback(fView, onKeyboardCallback);
 	glfwSetMouseButtonCallback(fView, onMouseCallback);
 	glfwSetScrollCallback(fView, onScrollCallback);
+        glfwSetCursorPosCallback(fView, onMotionCallback);
 	glfwSetWindowCloseCallback(fView, onCloseCallback);
 
         glfwMakeContextCurrent(fView);
+	glfwSwapInterval(0);
 
         fApp.pData->windows.push_back(fSelf);
 
@@ -356,6 +363,7 @@ struct Window::PrivateData {
 	glfwSetWindowSize(fView, width, height);
 
         //puglPostRedisplay(fView);
+	glfwSwapBuffers(fView);
     }
 
     // -------------------------------------------------------------------
@@ -379,7 +387,7 @@ struct Window::PrivateData {
 	glfwSetWindowTitle(fView, title);
     }
 
-    void setTransientWinId(const uintptr_t winId)
+    void setTransientWinId(const uintptr_t)
     {
     }
 
@@ -398,6 +406,7 @@ struct Window::PrivateData {
     void idle()
     {
 	glfwPollEvents();
+	glfwSwapBuffers(fView);
 
 #ifdef DISTRHO_OS_MAC
         if (fNeedsIdle)
@@ -430,19 +439,6 @@ struct Window::PrivateData {
     // -------------------------------------------------------------------
 
 #if 0 // XXX do callbacks later
-    void onPuglDisplay()
-    {
-        fSelf->onDisplayBefore();
-
-        FOR_EACH_WIDGET(it)
-        {
-            Widget* const widget(*it);
-            widget->pData->display(fWidth, fHeight);
-        }
-
-        fSelf->onDisplayAfter();
-    }
-
     int onPuglSpecial(const bool press, const Key key)
     {
         DBGp("PUGL: onSpecial : %i %i\n", press, key);
@@ -469,6 +465,7 @@ struct Window::PrivateData {
 
         return 1;
     }
+#endif // XXX do callbacks later
 
     void onPuglMotion(const int x, const int y)
     {
@@ -478,8 +475,8 @@ struct Window::PrivateData {
             return;
 
         Widget::MotionEvent ev;
-        ev.mod  = static_cast<Modifier>(puglGetModifiers(fView));
-        ev.time = puglGetEventTimestamp(fView);
+        //ev.mod  = static_cast<Modifier>(mods);
+        ev.time = (uint32_t)(glfwGetTime() * 1000.);
 
         FOR_EACH_WIDGET_INV(rit)
         {
@@ -512,41 +509,50 @@ struct Window::PrivateData {
                 widget->setSize(fWidth, fHeight);
         }
     }
-#endif // XXX do callbacks later
 
-    int onPuglKeyboard(const bool press, const uint key)
+    void onPuglDisplay()
     {
-        DBGp("PUGL: onKeyboard : %i %i\n", press, key);
+        fSelf->onDisplayBefore();
+
+        FOR_EACH_WIDGET(it)
+        {
+            Widget* const widget(*it);
+            widget->pData->display(fWidth, fHeight);
+        }
+
+        fSelf->onDisplayAfter();
+    }
+
+    void onPuglKeyboard(const bool press, const uint key, const uint mods)
+    //static void onKeyboardCallback(GLFWwindow * view, int key, int scancode, int press, int mods)
+    {
+        DBGp("GLFW: onKeyboard : %i %i\n", press, key);
 
         if (fModal.childFocus != nullptr)
         {
             fModal.childFocus->focus();
-            return 0;
+            return;
         }
 
         Widget::KeyboardEvent ev;
         ev.press = press;
         ev.key  = key;
-        //ev.mod  = static_cast<Modifier>(puglGetModifiers(fView));
-        ev.time = glfwGetTime();
+        ev.mod  = static_cast<Modifier>(mods);
+        ev.time = (uint32_t)(glfwGetTime() * 1000.);
 
         FOR_EACH_WIDGET_INV(rit)
         {
             Widget* const widget(*rit);
 
             if (widget->isVisible() && widget->onKeyboard(ev))
-                return 0;
+                return;
         }
-
-        return 1;
     }
 
-    void onPuglMouse(const int button, const bool press, const int x, const int y)
+    void onPuglMouse(const int button, const bool press, const int x, const int y, const int mods)
+    //static void onMouseCallback(GLFWwindow * view, int button, int press, int mods)
     {
-        DBGp("PUGL: onMouse : %i %i %i %i\n", button, press, x, y);
-
-        // FIXME - pugl sends 2 of these for each window on init, don't ask me why. we'll ignore it
-        if (press && button == 0 && x == 0 && y == 0) return;
+        DBGp("GLFW: onMouse : %i %i %i %i\n", button, press, x, y);
 
         if (fModal.childFocus != nullptr)
             return fModal.childFocus->focus();
@@ -554,8 +560,8 @@ struct Window::PrivateData {
         Widget::MouseEvent ev;
         ev.button = button;
         ev.press  = press;
-        //ev.mod    = static_cast<Modifier>(puglGetModifiers(fView));
-        ev.time = glfwGetTime();
+        ev.mod    = static_cast<Modifier>(mods);
+        ev.time = (uint32_t)(glfwGetTime() * 1000.);
 
         FOR_EACH_WIDGET_INV(rit)
         {
@@ -569,16 +575,17 @@ struct Window::PrivateData {
     }
 
     void onPuglScroll(const int x, const int y, const float dx, const float dy)
+    //static void onScrollCallback(GLFWwindow* view, double dx, double dy)
     {
-        DBGp("PUGL: onScroll : %i %i %f %f\n", x, y, dx, dy);
+        DBGp("GLFW: onScroll : %i %i %f %f\n", x, y, dx, dy);
 
         if (fModal.childFocus != nullptr)
             return;
 
         Widget::ScrollEvent ev;
         ev.delta = Point<float>(dx, dy);
-        //ev.mod   = static_cast<Modifier>(puglGetModifiers(fView));
-        ev.time = glfwGetTime();
+        //ev.mod   = static_cast<Modifier>(mods);
+        ev.time = (uint32_t)(glfwGetTime() * 1000.);
 
         FOR_EACH_WIDGET_INV(rit)
         {
@@ -592,8 +599,9 @@ struct Window::PrivateData {
     }
 
     void onPuglClose()
+    //static void onCloseCallback(GLFWwindow * view)
     {
-        DBG("PUGL: onClose\n");
+        DBG("GLFW: onClose\n");
 
         if (fModal.enabled)
             exec_fini();
@@ -610,7 +618,7 @@ struct Window::PrivateData {
 
     Application& fApp;
     Window*      fSelf;
-    GLFWwindow*    fView;
+    GLFWwindow*  fView;
 
     bool fFirstInit;
     bool fVisible;
@@ -645,32 +653,56 @@ struct Window::PrivateData {
         DISTRHO_DECLARE_NON_COPY_STRUCT(Modal)
     } fModal;
 
-          GLFWmonitor * monitor;
+    GLFWmonitor * monitor;
 
     // -------------------------------------------------------------------
     // Callbacks
 
-#if 0 // XXX
-    #define handlePtr ((PrivateData*)puglGetHandle(view))
+    #define handlePtr ((PrivateData*)glfwGetWindowUserPointer(view))
 
-    static void onDisplayCallback(PuglView* view)
+    static void onKeyboardCallback(GLFWwindow* view, int key, int scancode, int action, int mods)
+    {
+        handlePtr->onPuglKeyboard(action, key, mods);
+    }
+
+    static void onMouseCallback(GLFWwindow* view, int button, int action, int mods)
+    {
+        double x, y;
+        glfwGetCursorPos(view, &x, &y);
+        handlePtr->onPuglMouse(button, action, (int)x, (int)y, mods);
+    }
+
+    static void onScrollCallback(GLFWwindow* view, double dx, double dy)
+    {
+        double x, y;
+        glfwGetCursorPos(view, &x, &y);
+        handlePtr->onPuglScroll((int)x, (int)y, dx, dy);
+    }
+
+    static void onCloseCallback(GLFWwindow* view)
+    {
+        handlePtr->onPuglClose();
+    }
+
+    static void onDisplayCallback(GLFWwindow* view)
     {
         handlePtr->onPuglDisplay();
     }
 
+    static void onReshapeCallback(GLFWwindow* view, int width, int height)
+    {
+        handlePtr->onPuglReshape(width, height);
+    }
+
+    static void onMotionCallback(GLFWwindow* view, double x, double y)
+    {
+        handlePtr->onPuglMotion((int)x, (int)y);
+    }
+
+#if 0 // XXX
     static int onSpecialCallback(PuglView* view, bool press, PuglKey key)
     {
         return handlePtr->onPuglSpecial(press, static_cast<Key>(key));
-    }
-
-    static void onMotionCallback(PuglView* view, int x, int y)
-    {
-        handlePtr->onPuglMotion(x, y);
-    }
-
-    static void onReshapeCallback(PuglView* view, int width, int height)
-    {
-        handlePtr->onPuglReshape(width, height);
     }
 
     static void fileBrowserSelectedCallback(PuglView* view, const char* filename)
@@ -680,26 +712,6 @@ struct Window::PrivateData {
 
     #undef handlePtr
 #endif // XXX
-
-    static void onKeyboardCallback(GLFWwindow * view, int key, int scancode, int action, int mods);
-    {
-        handlePtr->onPuglKeyboard(action, key);
-    }
-
-    static void onMouseCallback(GLFWwindow * view, int button, int action, int mods)
-    {
-        handlePtr->onPuglMouse(button, action, 0, 0);
-    }
-
-    static void onScrollCallback(PuglView* view, double dx, double dy)
-    {
-        handlePtr->onPuglScroll(0, 0, dx, dy);
-    }
-
-    static void onCloseCallback(GLFWwindow * view)
-    {
-        handlePtr->onPuglClose();
-    }
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PrivateData)
 };
@@ -748,7 +760,7 @@ void Window::focus()
 
 void Window::repaint() noexcept
 {
-    //puglPostRedisplay(pData->fView);
+    glfwSwapBuffers(pData->fView);
 }
 
 // static int fib_filter_filename_filter(const char* const name)
