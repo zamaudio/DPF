@@ -265,7 +265,7 @@ struct Window::PrivateData {
             // the mouse position probably changed since the modal appeared,
             // so send a mouse motion event to the modal's parent window
             glfwGetCursorPos(view, &wx, &wy);
-            fModal.parent->onPuglMotion((int)wx, (int)wy);
+            fModal.parent->onGLFWMotion((int)wx, (int)wy);
         }
 
         DBG("Ok\n");
@@ -442,7 +442,7 @@ struct Window::PrivateData {
 
     // -------------------------------------------------------------------
 
-    void onPuglDisplay()
+    void onGLFWDisplay()
     {
         fSelf->onDisplayBefore();
 
@@ -455,7 +455,7 @@ struct Window::PrivateData {
         fSelf->onDisplayAfter();
     }
 
-    void onPuglKeyboard(const bool press, const uint key, const uint mods)
+    void onGLFWKeyboard(const bool press, const uint key, const uint mods)
     {
         DBGp("GLFW: onKeyboard : %i %i\n", press, key);
 
@@ -481,7 +481,7 @@ struct Window::PrivateData {
     }
 
 #if 0 // XXX do callbacks later
-    int onPuglSpecial(const bool press, const Key key)
+    int onGLFWSpecial(const bool press, const Key key)
     {
         DBGp("PUGL: onSpecial : %i %i\n", press, key);
 
@@ -509,7 +509,7 @@ struct Window::PrivateData {
     }
 #endif // XXX do callbacks later
 
-    void onPuglMouse(const int button, const bool press, const int x, const int y, const int mods)
+    void onGLFWMouse(const int button, const bool press, const int x, const int y, const int mods)
     {
         DBGp("GLFW: onMouse : %i %i %i %i\n", button, press, x, y);
 
@@ -536,7 +536,7 @@ struct Window::PrivateData {
         }
     }
 
-    void onPuglMotion(const int x, const int y)
+    void onGLFWMotion(const int x, const int y)
     {
         DBGp("PUGL: onMotion : %i %i\n", x, y);
 
@@ -558,7 +558,7 @@ struct Window::PrivateData {
         }
     }
 
-    void onPuglScroll(const int x, const int y, const float dx, const float dy)
+    void onGLFWScroll(const int x, const int y, const float dx, const float dy)
     {
         DBGp("GLFW: onScroll : %i %i %f %f\n", x, y, dx, dy);
 
@@ -581,7 +581,7 @@ struct Window::PrivateData {
         }
     }
 
-    void onPuglReshape(const int width, const int height)
+    void onGLFWReshape(const int width, const int height)
     {
         DBGp("PUGL: onReshape : %i %i\n", width, height);
 
@@ -602,7 +602,7 @@ struct Window::PrivateData {
         }
     }
 
-    void onPuglClose()
+    void onGLFWClose()
     {
         DBG("GLFW: onClose\n");
 
@@ -665,18 +665,18 @@ struct Window::PrivateData {
 
     static void onDisplayCallback(GLFWwindow* view)
     {
-        handlePtr->onPuglDisplay();
+        handlePtr->onGLFWDisplay();
     }
 
     static void onKeyboardCallback(GLFWwindow* view, int key, int scancode, int action, int mods)
     {
-        handlePtr->onPuglKeyboard(action, key, mods);
+        handlePtr->onGLFWKeyboard(action, key, mods);
     }
 
 #if 0 // XXX
     static int onSpecialCallback(PuglView* view, bool press, PuglKey key)
     {
-        return handlePtr->onPuglSpecial(press, static_cast<Key>(key));
+        return handlePtr->onGLFWSpecial(press, static_cast<Key>(key));
     }
 #endif // XXX
 
@@ -684,29 +684,29 @@ struct Window::PrivateData {
     {
         double x, y;
         glfwGetCursorPos(view, &x, &y);
-        handlePtr->onPuglMouse(button, action, (int)x, (int)y, mods);
+        handlePtr->onGLFWMouse(button, action, (int)x, (int)y, mods);
     }
 
     static void onMotionCallback(GLFWwindow* view, double x, double y)
     {
-        handlePtr->onPuglMotion((int)x, (int)y);
+        handlePtr->onGLFWMotion((int)x, (int)y);
     }
 
     static void onScrollCallback(GLFWwindow* view, double dx, double dy)
     {
         double x, y;
         glfwGetCursorPos(view, &x, &y);
-        handlePtr->onPuglScroll((int)x, (int)y, dx, dy);
+        handlePtr->onGLFWScroll((int)x, (int)y, dx, dy);
     }
 
     static void onReshapeCallback(GLFWwindow* view, int width, int height)
     {
-        handlePtr->onPuglReshape(width, height);
+        handlePtr->onGLFWReshape(width, height);
     }
 
     static void onCloseCallback(GLFWwindow* view)
     {
-        handlePtr->onPuglClose();
+        handlePtr->onGLFWClose();
     }
 
     static void fileBrowserSelectedCallback(GLFWwindow* view, int count, const char** filenames)
