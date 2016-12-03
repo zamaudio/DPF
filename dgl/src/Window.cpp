@@ -403,9 +403,8 @@ struct Window::PrivateData {
 
     void idle()
     {
-        fSelf->onDisplayBefore();
 	glfwPollEvents();
-        fSelf->onDisplayAfter();
+	glfwSwapBuffers(fView);
 
 #ifdef DISTRHO_OS_MAC
         if (fNeedsIdle)
