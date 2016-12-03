@@ -702,9 +702,10 @@ struct Window::PrivateData {
 
     static void fileBrowserSelectedCallback(GLFWwindow* view, int count, const char** filenames)
     {
-	if (count > 2)
+	if (count > 1)
 		printf("WARNING, you gave me too many files\n");
-        handlePtr->fSelf->fileBrowserSelected(filenames[0]);
+	if (count > 0)
+        	handlePtr->fSelf->fileBrowserSelected(filenames[0]);
     }
 
 #if 0 // XXX
