@@ -903,7 +903,7 @@ Application& Window::getApp() const noexcept
 
 intptr_t Window::getWindowId() const noexcept
 {
-    return 0;//puglGetNativeWindow(pData->fView);
+    return glfwGetCurrentContext();
 }
 
 void Window::_addWidget(Widget* const widget)
