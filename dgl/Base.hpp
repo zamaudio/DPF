@@ -132,6 +132,7 @@ enum Char {
    Keyboard modifier flags.
  */
 enum Modifier {
+    kModifierNone    = 0,
     kModifierShift   = 1 << 0, /**< Shift key */
     kModifierControl = 1 << 1, /**< Control key */
     kModifierAlt     = 1 << 2, /**< Alt/Option key */
