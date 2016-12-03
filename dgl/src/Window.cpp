@@ -909,7 +909,7 @@ Application& Window::getApp() const noexcept
 
 intptr_t Window::getWindowId() const noexcept
 {
-    return glfwGetCurrentContext();
+    return 0;
 }
 
 void Window::_addWidget(Widget* const widget)
