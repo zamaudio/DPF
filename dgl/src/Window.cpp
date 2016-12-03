@@ -53,6 +53,8 @@ struct Window::PrivateData {
           fVisible(false),
           fResizable(true),
           fUsingEmbed(false),
+          fNeedsRepaint(true),
+          fLastKeyMod(kModifierNone),
           fWidth(1),
           fHeight(1),
           fTitle(nullptr),
@@ -72,6 +74,8 @@ struct Window::PrivateData {
           fVisible(false),
           fResizable(true),
           fUsingEmbed(false),
+          fNeedsRepaint(true),
+          fLastKeyMod(kModifierNone),
           fWidth(1),
           fHeight(1),
           fTitle(nullptr),
@@ -91,6 +95,8 @@ struct Window::PrivateData {
           fVisible(parentId != 0),
           fResizable(parentId == 0),
           fUsingEmbed(parentId != 0),
+          fNeedsRepaint(true),
+          fLastKeyMod(kModifierNone),
           fWidth(1),
           fHeight(1),
           fTitle(nullptr),
@@ -100,7 +106,6 @@ struct Window::PrivateData {
         if (fUsingEmbed)
         {
             DBG("Creating embedded window..."); DBGF;
-            //puglInitWindowParent(fView, parentId);
         }
         else
         {
@@ -143,7 +148,7 @@ struct Window::PrivateData {
         glfwSetCursorPosCallback(fView, onMotionCallback);
         glfwSetMouseButtonCallback(fView, onMouseCallback);
         glfwSetScrollCallback(fView, onScrollCallback);
-#if 0	// XXX do callbacks latter
+#if 0	// XXX do callbacks later
         puglSetSpecialFunc(fView, onSpecialCallback);
 #endif
         glfwSetWindowSizeCallback(fView, onReshapeCallback);
@@ -264,7 +269,7 @@ struct Window::PrivateData {
             fModal.parent->fModal.childFocus = nullptr;
             // the mouse position probably changed since the modal appeared,
             // so send a mouse motion event to the modal's parent window
-            glfwGetCursorPos(view, &wx, &wy);
+            glfwGetCursorPos(fView, &wx, &wy);
             fModal.parent->onGLFWMotion((int)wx, (int)wy);
         }
 
@@ -276,7 +281,7 @@ struct Window::PrivateData {
     void focus()
     {
         DBG("Window focus\n");
-	glfwFocusWindow(fView);
+        glfwFocusWindow(fView);
     }
 
     // -------------------------------------------------------------------
@@ -366,9 +371,9 @@ struct Window::PrivateData {
 
         DBGp("Window setSize called %s, size %i %i, resizable %s\n", forced ? "(forced)" : "(not forced)", width, height, fResizable?"true":"false");
 
-	glfwSetWindowSize(fView, width, height);
+        glfwSetWindowSize(fView, width, height);
 
-	glfwSwapBuffers(fView);
+        fSelf->repaint();
     }
 
     // -------------------------------------------------------------------
@@ -389,7 +394,7 @@ struct Window::PrivateData {
 
         fTitle = strdup(title);
 
-	glfwSetWindowTitle(fView, title);
+        glfwSetWindowTitle(fView, title);
     }
 
     void setTransientWinId(const uintptr_t)
@@ -410,7 +415,11 @@ struct Window::PrivateData {
 
     void idle()
     {
-	glfwPollEvents();
+        if (fNeedsRepaint) {
+            onGLFWDisplay();
+            fNeedsRepaint = false;
+        }
+        glfwPollEvents();
 
 #ifdef DISTRHO_OS_MAC
         if (fNeedsIdle)
@@ -465,6 +474,31 @@ struct Window::PrivateData {
             return;
         }
 
+        if (press) {
+            switch (key) {
+            case GLFW_KEY_LEFT_SHIFT:
+            case GLFW_KEY_RIGHT_SHIFT:
+                fLastKeyMod = kModifierShift;
+                break;
+            case GLFW_KEY_LEFT_CONTROL:
+            case GLFW_KEY_RIGHT_CONTROL:
+                fLastKeyMod = kModifierControl;
+                break;
+            case GLFW_KEY_LEFT_ALT:
+            case GLFW_KEY_RIGHT_ALT:
+                fLastKeyMod = kModifierAlt;
+                break;
+            case GLFW_KEY_LEFT_SUPER:
+            case GLFW_KEY_RIGHT_SUPER:
+                fLastKeyMod = kModifierSuper;
+            default:
+                fLastKeyMod = kModifierNone;
+                break;
+            }
+        } else {
+            fLastKeyMod = kModifierNone;
+        }
+
         Widget::KeyboardEvent ev;
         ev.press = press;
         ev.key  = key;
@@ -516,11 +550,11 @@ struct Window::PrivateData {
         if (fModal.childFocus != nullptr)
             return fModal.childFocus->focus();
 
-	//1 = left, 2 = middle, 3 = right
+        //1 = left, 2 = middle, 3 = right
         Widget::MouseEvent ev;
         ev.button = (button == GLFW_MOUSE_BUTTON_LEFT) ? 1 :
-			(button == GLFW_MOUSE_BUTTON_MIDDLE) ? 2 :
-			(button == GLFW_MOUSE_BUTTON_RIGHT) ? 3 : 1;
+                    (button == GLFW_MOUSE_BUTTON_MIDDLE) ? 2 :
+                    (button == GLFW_MOUSE_BUTTON_RIGHT) ? 3 : 1;
         ev.press  = press;
         ev.mod    = static_cast<Modifier>(mods);
         ev.time = (uint32_t)(glfwGetTime() * 1000.);
@@ -544,7 +578,7 @@ struct Window::PrivateData {
             return;
 
         Widget::MotionEvent ev;
-        //ev.mod  = static_cast<Modifier>(mods);
+        ev.mod  = fLastKeyMod;
         ev.time = (uint32_t)(glfwGetTime() * 1000.);
 
         FOR_EACH_WIDGET_INV(rit)
@@ -567,7 +601,7 @@ struct Window::PrivateData {
 
         Widget::ScrollEvent ev;
         ev.delta = Point<float>(dx, dy);
-        //ev.mod   = static_cast<Modifier>(mods);
+        ev.mod   = fLastKeyMod;
         ev.time = (uint32_t)(glfwGetTime() * 1000.);
 
         FOR_EACH_WIDGET_INV(rit)
@@ -627,6 +661,8 @@ struct Window::PrivateData {
     bool fVisible;
     bool fResizable;
     bool fUsingEmbed;
+    bool fNeedsRepaint;
+    Modifier fLastKeyMod;
     uint fWidth;
     uint fHeight;
     char* fTitle;
@@ -711,10 +747,10 @@ struct Window::PrivateData {
 
     static void fileBrowserSelectedCallback(GLFWwindow* view, int count, const char** filenames)
     {
-	if (count > 1)
-		printf("WARNING, you gave me too many files\n");
-	if (count > 0)
-        	handlePtr->fSelf->fileBrowserSelected(filenames[0]);
+        if (count > 1)
+            printf("WARNING, you gave me too many files\n");
+        if (count > 0)
+            handlePtr->fSelf->fileBrowserSelected(filenames[0]);
     }
 
     #undef handlePtr
@@ -766,7 +802,7 @@ void Window::focus()
 
 void Window::repaint() noexcept
 {
-    glfwSwapBuffers(pData->fView);
+    pData->fNeedsRepaint = true;
 }
 
 // static int fib_filter_filename_filter(const char* const name)
