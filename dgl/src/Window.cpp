@@ -947,6 +947,7 @@ void Window::onDisplayBefore()
 
 void Window::onDisplayAfter()
 {
+    glfwSwapBuffers(pData->fView);
 }
 
 void Window::onReshape(uint width, uint height)
