@@ -58,7 +58,7 @@ struct Window::PrivateData {
           fTitle(nullptr),
           fWidgets(),
           fModal(),
-          monitor(nullptr),
+          monitor(nullptr)
     {
         DBG("Creating window without parent..."); DBGF;
         init();
@@ -77,7 +77,7 @@ struct Window::PrivateData {
           fTitle(nullptr),
           fWidgets(),
           fModal(parent.pData),
-          monitor(nullptr),
+          monitor(nullptr)
     {
         DBG("Creating window with parent..."); DBGF;
         init();
@@ -95,7 +95,7 @@ struct Window::PrivateData {
           fHeight(1),
           fTitle(nullptr),
           fWidgets(),
-          fModal(),
+          fModal()
     {
         if (fUsingEmbed)
         {
@@ -126,10 +126,10 @@ struct Window::PrivateData {
             return;
         }
 
-	fView = glfwCreateWindow(static_cast<int>(fWidth), static_cast<int>(fHeight), "title", nullptr, nullptr);
-
 	if (!glfwInit())
 		exit(1);
+
+	fView = glfwCreateWindow(static_cast<int>(fWidth), static_cast<int>(fHeight), "title", nullptr, nullptr);
 
 	// XXX do callbacks latter
 #if 0
