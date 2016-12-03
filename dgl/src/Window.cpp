@@ -708,9 +708,9 @@ struct Window::PrivateData {
     {
         handlePtr->fSelf->fileBrowserSelected(filename);
     }
+#endif // XXX
 
     #undef handlePtr
-#endif // XXX
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PrivateData)
 };
