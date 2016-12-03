@@ -702,7 +702,9 @@ struct Window::PrivateData {
 
     static void fileBrowserSelectedCallback(GLFWwindow* view, int count, const char** filenames)
     {
-        handlePtr->fSelf->fileBrowserSelected(count, filenames);
+	if (count > 2)
+		printf("WARNING, you gave me too many files\n");
+        handlePtr->fSelf->fileBrowserSelected(filenames[0]);
     }
 
 #if 0 // XXX
@@ -967,11 +969,9 @@ void Window::onClose()
 {
 }
 
-void Window::fileBrowserSelected(int count, const char ** filenames)
+void Window::fileBrowserSelected(const char * filename)
 {
-	for (unsigned i = 0; i < count; i++) {
-		printf("file path dropped on window was: %s\n", filenames[i]);
-	}
+	printf("file path dropped on window was: %s\n", filename);
 }
 
 // -----------------------------------------------------------------------
